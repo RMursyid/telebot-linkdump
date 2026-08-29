@@ -8,9 +8,9 @@ $update = json_decode($content, true);
 
 // 3. Load config and helper scripts
 require_once __DIR__ . '/../config.php';
-require_once __DIR__ . '/src/rules.php';
-require_once __DIR__ . '/src/includes/telegram.php';
-require_once __DIR__ . '/src/includes/logger.php';
+require_once __DIR__ . '/rules.php';
+require_once __DIR__ . '/includes/telegram.php';
+require_once __DIR__ . '/includes/logger.php';
 
 // 4. Wipe out any trapped whitespace or BOM output from the included files
 ob_clean();
@@ -74,7 +74,9 @@ if (isset($update["message"])) {
         $report = "📡 **Link Fixer Health Status**\n\n";
         foreach ($services as $name => $url) {
             $status  = checkServiceStatus($url);
-            $report .= "• **{$name}**: {$status}\n";
+            // Pad the name to 12 characters inside monospaced backticks
+            $paddedName = str_pad($name, 12, ' ');
+            $report    .= "• `$paddedName` {$status}\n";
         }
 
         telegramRequest($apiUrl . "/sendMessage", [
