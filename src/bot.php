@@ -7,7 +7,7 @@ $content = file_get_contents("php://input");
 $update = json_decode($content, true);
 
 // 3. Load config and helper scripts
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/../config.php';
 require_once __DIR__ . '/src/rules.php';
 require_once __DIR__ . '/src/includes/telegram.php';
 require_once __DIR__ . '/src/includes/logger.php';
