@@ -8,8 +8,9 @@ $update = json_decode($content, true);
 
 // 3. Load config and helper scripts
 require_once __DIR__ . '/config.php';
-require_once __DIR__ . '/rules.php';
-require_once __DIR__ . '/../shared/telegram.php';
+require_once __DIR__ . '/src/rules.php';
+require_once __DIR__ . '/src/includes/telegram.php';
+require_once __DIR__ . '/src/includes/logger.php';
 
 // 4. Wipe out any trapped whitespace or BOM output from the included files
 ob_clean();
