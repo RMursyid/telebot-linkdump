@@ -1,0 +1,14 @@
+# Ignore local credentials
+config.php
+
+# Ignore trash folder and hidden scratch files
+/.trash/
+
+# Ignore log files and logs folder
+*.log
+log.txt
+/logs/
+
+# Ignore archives
+*.zip
+*.tar.gz
