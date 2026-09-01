@@ -12,3 +12,6 @@ log.txt
 # Ignore archives
 *.zip
 *.tar.gz
+
+
+*.kate-swp

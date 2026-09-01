@@ -12,7 +12,6 @@ $rules = [
     ],
     // Pixiv: Matches any /artworks/NUMBER path
     [
-        //'pattern'     => '#/artworks/(\d+)#i',
         'pattern'     => '/https?:\/\/(?:[a-z0-9-]+\.)?(?:pixiv\.net|phixiv\.net)\/(?:[a-z]{2}\/)?artworks\/(\d+(?:\/\d+)?)(?:\?[^\s]*)?/i',
         'replacement' => 'https://phixiv.net/artworks/$1'
     ],
