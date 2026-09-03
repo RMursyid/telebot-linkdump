@@ -16,3 +16,4 @@ log.txt
 
 *.kate-swp
 index.php
+src/index.php
