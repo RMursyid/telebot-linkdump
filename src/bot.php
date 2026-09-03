@@ -41,12 +41,6 @@ if (isset($update["message"])) {
     if (isset($message["from"]["username"])) {
         $sender = "@" . $message["from"]["username"];
     }
-    
-    // DETECT MANUAL INDEX (e.g. //2 at end of message) mainly for oginstagram
-    $manualIndex = null;
-    if (preg_match('/\/\/(\d+)\s*$/', $rawText, $matches)) {
-        $manualIndex = $matches[1];
-    }
 
     // Extract base command (strips @twxddbot and extra arguments)
     $command = explode(' ', $rawText)[0];
@@ -71,12 +65,12 @@ if (isset($update["message"])) {
             'vxTikTok'    => 'https://vxtiktok.com'
         ];
 
-        $report = "📡 **Link Fixer Health Status**\n\n";
+        $report = "ðŸ“¡ **Link Fixer Health Status**\n\n";
         foreach ($services as $name => $url) {
             $status  = checkServiceStatus($url);
             // Pad the name to 12 characters inside monospaced backticks
             $paddedName = str_pad($name, 12, ' ');
-            $report    .= "• `$paddedName` {$status}\n";
+            $report    .= "â€¢ `$paddedName` {$status}\n";
         }
 
         telegramRequest($apiUrl . "/sendMessage", [
@@ -107,13 +101,13 @@ if (isset($update["message"])) {
         $lastErrorDate = isset($info['last_error_date']) ? date('Y-m-d H:i:s T', $info['last_error_date']) : 'N/A';
 
         // 3. Build formatted status message
-        $report  = "⚡ **Webhook Reset Complete**\n\n";
-        $report .= "📊 **Current Webhook Info:**\n";
-        $report .= "• **URL:** `{$url}`\n";
-        $report .= "• **IP Address:** `{$ip}`\n";
-        $report .= "• **Pending Updates:** `{$pendingCount}`\n";
-        $report .= "• **Last Error Date:** `{$lastErrorDate}`\n";
-        $report .= "• **Last Error Message:** `{$lastErrorMsg}`";
+        $report  = "âš¡ **Webhook Reset Complete**\n\n";
+        $report .= "ðŸ“Š **Current Webhook Info:**\n";
+        $report .= "â€¢ **URL:** `{$url}`\n";
+        $report .= "â€¢ **IP Address:** `{$ip}`\n";
+        $report .= "â€¢ **Pending Updates:** `{$pendingCount}`\n";
+        $report .= "â€¢ **Last Error Date:** `{$lastErrorDate}`\n";
+        $report .= "â€¢ **Last Error Message:** `{$lastErrorMsg}`";
 
         telegramRequest($apiUrl . "/sendMessage", [
             'chat_id'           => $chatId,
@@ -124,49 +118,41 @@ if (isset($update["message"])) {
         exit();
     }
 
-    // Unwrap Embeded Dirrect Link %2F
+    // Unwrap Embedded Direct Link (%2F encoded links)[cite: 4]
     if (preg_match('/(https?%3A%2F%2F[^\s&"\'<>]+)/i', $rawText, $matches)) {
         $unwrappedUrl = urldecode($matches[1]);
-
         if (preg_match('/https?%3A%2F%2F/i', $unwrappedUrl)) {
             $unwrappedUrl = urldecode($unwrappedUrl);
         }
         $rawText = $unwrappedUrl;
     }
 
-    // Normalize obfuscations
+    // Normalize obfuscations[cite: 4]
     $cleanedText = str_replace(
-        ['(.)', '[.]', '{.}', '(/)', '[/]', '{/}'], 
-        ['.',   '.',   '.',   '/',   '/',   '/'], 
+        ['(.)', '[.]', '{.}', '(/)', '[/]', '{/}'],
+        ['.',   '.',   '.',   '/',   '/',   '/'],
         $rawText
     );
     $cleanedText = preg_replace('#/{3,}#', '//', $cleanedText);
-    
-    // Collect converted links
+
+    // Process matching links against rules array
     $convertedLinks = [];
     foreach ($rules as $rule) {
-        if (preg_match_all($rule['pattern'], $cleanedText, $matches, PREG_SET_ORDER)) {
-            foreach ($matches as $match) {
-                $convertedLinks[] = preg_replace($rule['pattern'], $rule['replacement'], $match[0]);
+        if (preg_match_all($rule['pattern'], $cleanedText, $matches)) {
+            foreach ($matches[0] as $matchedUrl) {
+                if (isset($rule['callback']) && is_callable($rule['callback'])) {
+                    $convertedLinks[] = $rule['callback']($matchedUrl);
+                } else {
+                    $convertedLinks[] = preg_replace($rule['pattern'], $rule['replacement'], $matchedUrl);
+                }
             }
         }
     }
-    $convertedLinks = array_unique($convertedLinks);
+    $convertedLinks = array_values(array_filter(array_unique($convertedLinks)));
 
-    // Attach manual index to oginstagram links
-    if ($manualIndex !== null && !empty($convertedLinks)) {
-        foreach ($convertedLinks as &$link) {
-            if (str_contains($link, 'oginstagram.com')) {
-                $baseLink = strtok($link, '?');
-                $link = rtrim($baseLink, '/') . "/?img_index={$manualIndex}";
-            }
-        }
-        unset($link); // Break reference
-    }
-
-    // Send cleaned links
+    // Send converted links[cite: 4]
     if (!empty($convertedLinks)) {
-        // 1. Send "typing..." status as its own separate request
+        // Send typing status[cite: 4]
         $actionParams = [
             'chat_id' => $chatId,
             'action'  => 'typing'
@@ -176,9 +162,8 @@ if (isset($update["message"])) {
         }
         telegramRequest($apiUrl . "/sendChatAction", $actionParams, $apiUrl, $chatId, $debugTopicId);
 
-        // 2. Build clean parameters strictly for sendMessage
+        // Build and send link output[cite: 4]
         $linkList = implode("\n", $convertedLinks);
-
         $sendParams = [
             'chat_id'              => $chatId,
             'text'                 => $linkList,
@@ -192,7 +177,7 @@ if (isset($update["message"])) {
         telegramRequest($apiUrl . "/sendMessage", $sendParams, $apiUrl, $chatId, $debugTopicId);
 
         // Delete original post in Link Dump topic
-        if ($threadId === $linkDumpTopicId) {
+        if ($threadId == $linkDumpTopicId) {
             telegramRequest($apiUrl . "/deleteMessage", [
                 'chat_id'    => $chatId,
                 'message_id' => $messageId
