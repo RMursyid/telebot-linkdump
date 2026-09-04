@@ -2,7 +2,7 @@
 $rules = [
     // Twitter/X: Matches any /status/NUMBER path
     [
-        'pattern'     => '#(?:https?://)?(?:www\.)?(?:twitter\.com|x\.com|fxtwitter\.com|fixupx\.com)/[^/]+/status/(\d+)#i',
+        'pattern'     => '#(?:https?://)?(?:www\.)?(?:twitter\.com|x\.com|xcom|twittercom|fxtwitter\.com|fixupx\.com)/.+?/status/(\d+)#i',
         'replacement' => 'https://fxtwitter.com/i/status/$1'
     ],
     // Instagram: Converts /p/ or /reel/ to oginstagram, capturing img_index if present
