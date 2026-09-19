@@ -27,3 +27,11 @@ function logError($response, $httpCode, $apiUrl = null, $chatId = null, $debugTo
         curl_close($chErr);
     }
 }
+
+function logMessage($message) {
+    $logDir = __DIR__ . '/../../logs';
+    if (!is_dir($logDir)) {
+        mkdir($logDir, 0755, true);
+    }
+    file_put_contents($logDir . '/bot.log', date('[Y-m-d H:i:s] ') . $message . "\n", FILE_APPEND);
+}
